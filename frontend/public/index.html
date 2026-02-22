@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Career Copilot</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        th {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<h1>AI Career Copilot 🚀</h1>
+
+<input type="file" id="resumeFile" accept=".pdf,.docx" />
+<br>
+<button onclick="upload()">Upload & Analyze</button>
+
+<div id="results"></div>
+
+<script>
+async function upload() {
+    const fileInput = document.getElementById("resumeFile");
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    const response = await fetch("http://127.0.0.1:8000/upload_resume/", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    displayResults(data.matched_jobs);
+}
+
+function displayResults(jobs) {
+    let html = "<table>";
+    html += "<tr><th>Job</th><th>Company</th><th>Similarity %</th><th>Skill Match %</th><th>Final Score</th><th>Missing Skills</th></tr>";
+
+    jobs.forEach(job => {
+        html += `
+            <tr>
+                <td>${job.title}</td>
+                <td>${job.company}</td>
+                <td>${job.similarity_score}%</td>
+                <td>${job.skill_match_percentage}%</td>
+                <td>${job.final_score}%</td>
+                <td>${job.missing_skills.join(", ")}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    document.getElementById("results").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
