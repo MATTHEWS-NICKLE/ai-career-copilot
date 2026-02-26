@@ -1,0 +1,10 @@
+{
+  "name": "ai-career-copilot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend": "cd backend && .\\.venv\\Scripts\\python -m uvicorn app:app --reload",
+    "frontend": "cd frontend && npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  }
+}
