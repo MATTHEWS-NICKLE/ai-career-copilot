@@ -187,11 +187,4 @@ Final Score: 77%
 * Deploy with Docker
 * Build advanced React frontend
 
----
 
-AI Career Copilot is suitable for:
-
-* Final Year Projects
-* Portfolio Projects
-* AI Career Platforms
-* Startup MVP Development
