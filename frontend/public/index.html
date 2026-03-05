@@ -16,6 +16,11 @@
             border: none;
             cursor: pointer;
         }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+        }
         table {
             width: 100%;
             margin-top: 20px;
@@ -29,31 +34,69 @@
             background: #007bff;
             color: white;
         }
+        #loading {
+            display: none;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
 
 <h1>AI Career Copilot 🚀</h1>
 
-<input type="file" id="resumeFile" accept=".pdf,.docx" />
-<br>
-<button onclick="upload()">Upload & Analyze</button>
+<section id="uploadSection">
+    <h2>Resume Analyzer</h2>
+    <input type="file" id="resumeFile" accept=".pdf,.docx" />
+    <br>
+    <button onclick="upload()">Upload & Analyze</button>
+    <div id="loading">Analyzing, please wait...</div>
+    <div id="results"></div>
+</section>
 
-<div id="results"></div>
+<section id="jobSection">
+    <h2>Add New Job</h2>
+    <div class="error" id="jobError"></div>
+    <input type="text" id="jobTitle" placeholder="Title" />
+    <input type="text" id="jobCompany" placeholder="Company" />
+    <textarea id="jobDescription" rows="3" placeholder="Description"></textarea>
+    <input type="text" id="jobSkills" placeholder="Required skills (comma separated)" />
+    <button onclick="addJob()">Add Job</button>
+
+    <h3>Available Jobs</h3>
+    <button onclick="loadJobs()">Refresh Jobs</button>
+    <div id="jobs"></div>
+</section>
 
 <script>
 async function upload() {
     const fileInput = document.getElementById("resumeFile");
+    if (!fileInput.files[0]) {
+        alert("Please select a file first.");
+        return;
+    }
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
 
-    const response = await fetch("http://127.0.0.1:8000/upload_resume/", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await response.json();
-    displayResults(data.matched_jobs);
+    document.getElementById("loading").style.display = "block";
+    try {
+        const response = await fetch("/upload_resume", {
+            method: "POST",
+            body: formData
+        });
+        const data = await response.json();
+        if (response.ok) {
+            displayResults(data.matched_jobs);
+        } else {
+            alert(data.error || "Error analyzing resume");
+        }
+    } catch (err) {
+        alert("Failed to contact backend: " + err.message);
+    } finally {
+        document.getElementById("loading").style.display = "none";
+    }
 }
 
 function displayResults(jobs) {
@@ -76,6 +119,64 @@ function displayResults(jobs) {
     html += "</table>";
     document.getElementById("results").innerHTML = html;
 }
+
+async function addJob() {
+    const title = document.getElementById("jobTitle").value.trim();
+    const company = document.getElementById("jobCompany").value.trim();
+    const description = document.getElementById("jobDescription").value.trim();
+    const skills = document.getElementById("jobSkills").value.trim();
+    const errEl = document.getElementById("jobError");
+    errEl.textContent = "";
+
+    if (!title || !company) {
+        errEl.textContent = "Title and company are required.";
+        return;
+    }
+
+    try {
+        const response = await fetch("/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, company, description, required_skills: skills })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            loadJobs();
+            document.getElementById("jobTitle").value = "";
+            document.getElementById("jobCompany").value = "";
+            document.getElementById("jobDescription").value = "";
+            document.getElementById("jobSkills").value = "";
+        } else {
+            errEl.textContent = data.detail || data.error || "Failed to create job";
+        }
+    } catch (err) {
+        errEl.textContent = "Network error: " + err.message;
+    }
+}
+
+async function loadJobs() {
+    try {
+        const response = await fetch("/jobs");
+        const jobs = await response.json();
+        let html = "<table><tr><th>ID</th><th>Title</th><th>Company</th><th>Skills</th></tr>";
+        jobs.forEach(job => {
+            html += `
+                <tr>
+                    <td>${job.id}</td>
+                    <td>${job.title}</td>
+                    <td>${job.company}</td>
+                    <td>${job.required_skills}</td>
+                </tr>`;
+        });
+        html += "</table>";
+        document.getElementById("jobs").innerHTML = html;
+    } catch (err) {
+        document.getElementById("jobs").innerHTML = "<span class='error'>Failed to load jobs</span>";
+    }
+}
+
+// load jobs when the page starts
+loadJobs();
 </script>
 
 </body>

@@ -9,7 +9,7 @@ The system provides:
 * Missing Skills Recommendation
 * Final Weighted Score (Ranking)
 
-This project supports bulk job data using a database instead of CSV files and includes a simple frontend interface for resume upload and result display.
+This project supports bulk job data using a database instead of CSV files and includes a simple frontend interface with job management and resume upload.  A lightweight Express proxy is provided so the UI and API can run from the same origin.
 
 ---
 
@@ -22,7 +22,7 @@ This project supports bulk job data using a database instead of CSV files and in
 * Missing skill suggestions
 * Weighted final ranking
 * PostgreSQL database (handles large data)
-* Simple frontend UI for interaction
+* Simple frontend UI for interaction with job CRUD and resume analysis
 
 ---
 
@@ -32,7 +32,8 @@ Backend:
 
 * FastAPI
 * PostgreSQL
-* SQLAlchemy
+* SQLAlchemy ORM
+* Pydantic schemas
 * Scikit-learn
 * pdfplumber
 * python-docx
@@ -41,7 +42,7 @@ Frontend:
 
 * HTML
 * CSS
-* JavaScript (Fetch API)
+* JavaScript (Fetch API) with Express proxy
 
 ---
 
@@ -95,67 +96,46 @@ python, machine learning, sql, pandas, fastapi
 
 # Installation & Run
 
-1. Create virtual environment
+1. Create a Python virtual environment and activate it (see your platform's instructions).
+
+2. Install backend dependencies:
 
 ```
-python -m venv venv
+pip install -r backend/requirements.txt
 ```
 
-Activate:
+3. Ensure PostgreSQL is running and the `DATABASE_URL` environment variable is set if you are not using the default.
 
-Windows:
-
-```
-venv\Scripts\activate
-```
-
-Mac/Linux:
-
-```
-source venv/bin/activate
-```
-
-2. Install dependencies
-
-```
-pip install fastapi uvicorn sqlalchemy psycopg2-binary scikit-learn pdfplumber python-docx python-multipart
-```
-
-3. Update database URL in `app.py`
-
-```
-DATABASE_URL = "postgresql://postgres:yourpassword@localhost/ai_career_copilot"
-```
-
-4. Run backend
+4. Start the FastAPI server from the `backend` folder:
 
 ```
 uvicorn app:app --reload
 ```
 
-Server runs at:
+The API will be available at `http://127.0.0.1:8000`.
+
+5. In a separate terminal, install frontend dependencies and start Express:
 
 ```
-http://127.0.0.1:8000
+cd frontend
+npm install
+npm start
 ```
+
+The UI is then served at `http://localhost:3000`.
 
 ---
 
 # Frontend Setup
 
-The project includes a simple `index.html` file.
+This project includes a simple `index.html` file served via `frontend/server.js`. You can start the frontend by installing dependencies (`npm install`) and running `npm start`.
 
-To run frontend:
+The UI provides:
 
-* Simply open `index.html` in your browser
-  OR
-* Use Live Server (VS Code recommended)
-
-The frontend allows:
-
-* Resume upload
-* Sending file to FastAPI backend
-* Displaying job results in table format
+* Resume upload with progress indicator
+* Job creation and listing
+* Dynamic display of results returned by the backend
+* All API requests are proxied through Express to avoid CORS issues
 
 ---
 
@@ -196,8 +176,13 @@ Final Score: 77%
 
 # Future Improvements
 
-* Use Sentence Transformers instead of TF-IDF
-* Add Resume Improvement Suggestions
+* Replace TF-IDF with transformer embeddings (e.g. Sentence-BERT)
+* Add resume feedback and auto-skill estimates
+* Add authentication and user accounts
+* Allow editing/deleting jobs from the UI
+* Move cache out of process to Redis for horizontal scaling
+* Add unit tests and CI pipeline
+
 * Add Authentication System
 * Deploy with Docker
 * Build advanced React frontend

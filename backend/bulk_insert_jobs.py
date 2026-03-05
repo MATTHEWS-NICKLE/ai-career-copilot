@@ -1,7 +1,9 @@
 import random
 from sqlalchemy import create_engine, text
 
-DATABASE_URL = "postgresql://postgres:root@localhost/ai_career_copilot"
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:root@localhost/ai_career_copilot")
 engine = create_engine(DATABASE_URL)
 
 job_titles = [
