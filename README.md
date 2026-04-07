@@ -186,5 +186,3 @@ Final Score: 77%
 * Add Authentication System
 * Deploy with Docker
 * Build advanced React frontend
-
-
