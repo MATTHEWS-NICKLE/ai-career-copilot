@@ -3,106 +3,273 @@
 <head>
     <title>AI Career Copilot</title>
     <style>
+        :root {
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial;
-            background: #f4f6f8;
-            padding: 40px;
+            margin: 0;
+            font-family: Inter, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px;
         }
-        input, textarea {
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: clamp(2rem, 2.5vw, 3rem);
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            max-width: 660px;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+            align-items: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 22px 60px rgba(15, 23, 42, 0.06);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.35rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        input,
+        textarea {
             width: 100%;
-            padding: 8px;
-            margin-top: 4px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            color: white;
+            background: var(--primary);
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .secondary-button {
+            background: #f3f4f6;
+            color: var(--text);
+            width: auto;
+        }
+
+        .secondary-button:hover {
+            background: #e5e7eb;
+        }
+
+        .error {
+            color: var(--danger);
+            margin-bottom: 16px;
+        }
+
         table {
             width: 100%;
-            margin-top: 20px;
             border-collapse: collapse;
+            margin-top: 18px;
         }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
+
+        th,
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
         }
+
         th {
-            background: #007bff;
-            color: white;
+            background: #eef2ff;
+            font-weight: 700;
         }
-        #loading {
-            display: none;
-            margin-top: 10px;
+
+        tbody tr:hover {
+            background: #f8fafc;
         }
-        .error {
-            color: red;
+
+        .grid-full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 940px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 620px) {
+            main {
+                padding: 16px;
+            }
+
+            input,
+            textarea,
+            button {
+                font-size: 0.95rem;
+            }
         }
     </style>
 </head>
 <body>
+<main>
+    <header>
+        <div>
+            <h1>AI Career Copilot</h1>
+            <p>Upload a resume, add job postings, and get ranked matches that combine skill fit with semantic similarity.</p>
+        </div>
+        <div class="badge">FastAPI + Express proxy</div>
+    </header>
 
-<h1>AI Career Copilot 🚀</h1>
+    <div class="grid">
+        <section class="card">
+            <h2>Resume Analyzer</h2>
+            <label for="resumeFile">Upload a PDF or DOCX resume</label>
+            <input type="file" id="resumeFile" accept=".pdf,.docx" />
+            <button onclick="upload()">Analyze Resume</button>
+            <p id="loading" class="badge" style="display:none; margin-top:16px;">Analyzing resume, please wait...</p>
+            <div id="results"></div>
+        </section>
 
-<section id="uploadSection">
-    <h2>Resume Analyzer</h2>
-    <input type="file" id="resumeFile" accept=".pdf,.docx" />
-    <br>
-    <button onclick="upload()">Upload & Analyze</button>
-    <div id="loading">Analyzing, please wait...</div>
-    <div id="results"></div>
-</section>
+        <section class="card">
+            <h2>Add New Job</h2>
+            <div id="jobError" class="error"></div>
+            <label for="jobTitle">Job Title</label>
+            <input type="text" id="jobTitle" placeholder="Data Scientist" />
+            <label for="jobCompany">Company</label>
+            <input type="text" id="jobCompany" placeholder="TechCorp" />
+            <label for="jobDescription">Description</label>
+            <textarea id="jobDescription" rows="4" placeholder="Write a brief summary of the role..."></textarea>
+            <label for="jobSkills">Required Skills</label>
+            <input type="text" id="jobSkills" placeholder="python, sql, aws" />
+            <button onclick="addJob()">Add Job</button>
+        </section>
 
-<section id="jobSection">
-    <h2>Add New Job</h2>
-    <div class="error" id="jobError"></div>
-    <input type="text" id="jobTitle" placeholder="Title" />
-    <input type="text" id="jobCompany" placeholder="Company" />
-    <textarea id="jobDescription" rows="3" placeholder="Description"></textarea>
-    <input type="text" id="jobSkills" placeholder="Required skills (comma separated)" />
-    <button onclick="addJob()">Add Job</button>
-
-    <h3>Available Jobs</h3>
-    <button onclick="loadJobs()">Refresh Jobs</button>
-    <div id="jobs"></div>
-</section>
+        <section class="card grid-full">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h2>Available Jobs</h2>
+                    <p style="margin:4px 0 0; color: var(--muted);">Current job postings stored in the backend.</p>
+                </div>
+                <button class="secondary-button" onclick="loadJobs()">Refresh Jobs</button>
+            </div>
+            <div id="jobs"></div>
+        </section>
+    </div>
+</main>
 
 <script>
 async function upload() {
     const fileInput = document.getElementById("resumeFile");
     if (!fileInput.files[0]) {
-        alert("Please select a file first.");
+        alert("Please select a resume file first.");
         return;
     }
+
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
 
-    document.getElementById("loading").style.display = "block";
+    const loading = document.getElementById("loading");
+    loading.style.display = "inline-flex";
+
     try {
         const response = await fetch("/upload_resume", {
             method: "POST",
-            body: formData
+            body: formData,
         });
         const data = await response.json();
+
         if (response.ok) {
             displayResults(data.matched_jobs);
         } else {
-            alert(data.error || "Error analyzing resume");
+            displayError(data.detail || data.error || "Resume analysis failed.");
         }
     } catch (err) {
-        alert("Failed to contact backend: " + err.message);
+        displayError("Backend request failed: " + err.message);
     } finally {
-        document.getElementById("loading").style.display = "none";
+        loading.style.display = "none";
     }
 }
 
 function displayResults(jobs) {
-    let html = "<table>";
-    html += "<tr><th>Job</th><th>Company</th><th>Similarity %</th><th>Skill Match %</th><th>Final Score</th><th>Missing Skills</th></tr>";
+    const results = document.getElementById("results");
+    if (!jobs || jobs.length === 0) {
+        results.innerHTML = "<p>No matching jobs found yet. Add job postings and try again.</p>";
+        return;
+    }
 
+    let html = "<table><thead><tr><th>Job</th><th>Company</th><th>Similarity</th><th>Skill Match</th><th>Final Score</th><th>Missing Skills</th></tr></thead><tbody>";
     jobs.forEach(job => {
         html += `
             <tr>
@@ -111,13 +278,15 @@ function displayResults(jobs) {
                 <td>${job.similarity_score}%</td>
                 <td>${job.skill_match_percentage}%</td>
                 <td>${job.final_score}%</td>
-                <td>${job.missing_skills.join(", ")}</td>
-            </tr>
-        `;
+                <td>${job.missing_skills.length ? job.missing_skills.join(", ") : "None"}</td>
+            </tr>`;
     });
+    html += "</tbody></table>";
+    results.innerHTML = html;
+}
 
-    html += "</table>";
-    document.getElementById("results").innerHTML = html;
+function displayError(message) {
+    document.getElementById("results").innerHTML = `<p class="error">${message}</p>`;
 }
 
 async function addJob() {
@@ -125,11 +294,11 @@ async function addJob() {
     const company = document.getElementById("jobCompany").value.trim();
     const description = document.getElementById("jobDescription").value.trim();
     const skills = document.getElementById("jobSkills").value.trim();
-    const errEl = document.getElementById("jobError");
-    errEl.textContent = "";
+    const errorEl = document.getElementById("jobError");
+    errorEl.textContent = "";
 
     if (!title || !company) {
-        errEl.textContent = "Title and company are required.";
+        errorEl.textContent = "Title and company are required.";
         return;
     }
 
@@ -137,47 +306,59 @@ async function addJob() {
         const response = await fetch("/jobs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, company, description, required_skills: skills })
+            body: JSON.stringify({ title, company, description, required_skills: skills }),
         });
         const data = await response.json();
+
         if (response.ok) {
+            clearJobForm();
             loadJobs();
-            document.getElementById("jobTitle").value = "";
-            document.getElementById("jobCompany").value = "";
-            document.getElementById("jobDescription").value = "";
-            document.getElementById("jobSkills").value = "";
         } else {
-            errEl.textContent = data.detail || data.error || "Failed to create job";
+            errorEl.textContent = data.detail || data.error || "Unable to create job.";
         }
     } catch (err) {
-        errEl.textContent = "Network error: " + err.message;
+        errorEl.textContent = "Network error: " + err.message;
     }
 }
 
+function clearJobForm() {
+    document.getElementById("jobTitle").value = "";
+    document.getElementById("jobCompany").value = "";
+    document.getElementById("jobDescription").value = "";
+    document.getElementById("jobSkills").value = "";
+}
+
 async function loadJobs() {
+    const jobsContainer = document.getElementById("jobs");
+    jobsContainer.innerHTML = "<p>Loading jobs...</p>";
+
     try {
         const response = await fetch("/jobs");
         const jobs = await response.json();
-        let html = "<table><tr><th>ID</th><th>Title</th><th>Company</th><th>Skills</th></tr>";
+
+        if (!jobs || jobs.length === 0) {
+            jobsContainer.innerHTML = "<p>No jobs available yet. Add a job to begin matching.</p>";
+            return;
+        }
+
+        let html = "<table><thead><tr><th>ID</th><th>Title</th><th>Company</th><th>Skills</th></tr></thead><tbody>";
         jobs.forEach(job => {
             html += `
                 <tr>
                     <td>${job.id}</td>
                     <td>${job.title}</td>
                     <td>${job.company}</td>
-                    <td>${job.required_skills}</td>
+                    <td>${job.required_skills || "-"}</td>
                 </tr>`;
         });
-        html += "</table>";
-        document.getElementById("jobs").innerHTML = html;
+        html += "</tbody></table>";
+        jobsContainer.innerHTML = html;
     } catch (err) {
-        document.getElementById("jobs").innerHTML = "<span class='error'>Failed to load jobs</span>";
+        jobsContainer.innerHTML = `<p class="error">Failed to load jobs: ${err.message}</p>`;
     }
 }
 
-// load jobs when the page starts
-loadJobs();
+window.addEventListener("DOMContentLoaded", loadJobs);
 </script>
-
 </body>
 </html>

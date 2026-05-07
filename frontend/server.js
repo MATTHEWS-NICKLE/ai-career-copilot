@@ -30,9 +30,10 @@ app.post("/upload_resume", upload.single("file"), async (req, res) => {
         });
         res.json(response.data);
     } catch (err) {
-        res.status(500).json({ error: "Backend error", details: err.message });
+        const status = err.response?.status || 500;
+        const details = err.response?.data?.detail || err.response?.data || err.message;
+        res.status(status).json({ error: "Backend error", details });
     } finally {
-        // clean up temp file
         fs.unlink(req.file.path, () => {});
     }
 });
@@ -43,7 +44,9 @@ app.get("/jobs", async (req, res) => {
         const response = await axios.get("http://127.0.0.1:8000/jobs/");
         res.json(response.data);
     } catch (err) {
-        res.status(500).json({ error: "Failed to fetch jobs" });
+        const status = err.response?.status || 500;
+        const details = err.response?.data?.detail || err.response?.data || err.message;
+        res.status(status).json({ error: "Failed to fetch jobs", details });
     }
 });
 
@@ -52,7 +55,9 @@ app.post("/jobs", async (req, res) => {
         const response = await axios.post("http://127.0.0.1:8000/jobs/", req.body);
         res.json(response.data);
     } catch (err) {
-        res.status(500).json({ error: "Failed to create job" });
+        const status = err.response?.status || 500;
+        const details = err.response?.data?.detail || err.response?.data || err.message;
+        res.status(status).json({ error: "Failed to create job", details });
     }
 });
 

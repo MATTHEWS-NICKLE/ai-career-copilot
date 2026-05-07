@@ -10,13 +10,17 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import os
+from pathlib import Path
 
 # configuration (supports environment variable override)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:root@localhost/ai_career_copilot"
-)
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_DB_PATH = BASE_DIR / "ai_career_copilot.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
 
-engine = create_engine(DATABASE_URL)
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -64,12 +68,46 @@ class Job(JobBase):
 Base.metadata.create_all(bind=engine)
 
 
-# dependency for database session
-
 def get_db():
     db = SessionLocal()
     try:
         yield db
+    finally:
+        db.close()
+
+
+def seed_sample_jobs() -> None:
+    db: Session = SessionLocal()
+    try:
+        if db.query(JobModel).count() == 0:
+            sample_jobs = [
+                JobModel(
+                    title="Data Scientist",
+                    company="TechCorp",
+                    description="Analyze data, build predictive models, and translate insights for stakeholders.",
+                    required_skills="python, sql, pandas, machine learning",
+                ),
+                JobModel(
+                    title="Machine Learning Engineer",
+                    company="InnovaTech",
+                    description="Develop production-ready machine learning systems and automate model training.",
+                    required_skills="python, tensorflow, docker, aws",
+                ),
+                JobModel(
+                    title="Backend Developer",
+                    company="NextGen Solutions",
+                    description="Design APIs, integrate services, and maintain backend infrastructure.",
+                    required_skills="python, sql, fastapi, docker",
+                ),
+                JobModel(
+                    title="Frontend Developer",
+                    company="CloudMatrix",
+                    description="Build responsive web interfaces and improve user experience.",
+                    required_skills="javascript, react, html, css",
+                ),
+            ]
+            db.add_all(sample_jobs)
+            db.commit()
     finally:
         db.close()
 
@@ -85,13 +123,28 @@ def refresh_job_cache():
     try:
         jobs = db.query(JobModel).all()
         job_cache["jobs"] = jobs
-        descriptions = [job.description for job in jobs]
-        if descriptions:
-            job_cache["tfidf_matrix"] = vectorizer.fit_transform(descriptions)
+        job_texts = [
+            " ".join(
+                [
+                    job.title or "",
+                    job.description or "",
+                    job.required_skills or "",
+                ]
+            ).strip()
+            for job in jobs
+        ]
+        if any(job_texts):
+            job_cache["tfidf_matrix"] = vectorizer.fit_transform(job_texts)
         else:
             job_cache["tfidf_matrix"] = None
     finally:
         db.close()
+
+
+@app.on_event("startup")
+def startup_event():
+    seed_sample_jobs()
+    refresh_job_cache()
 
 
 # initialize cache once
@@ -142,7 +195,9 @@ def match_jobs(resume_text: str) -> List[dict]:
     results = []
     for i, job in enumerate(jobs):
         required_skills = set(
-            skill.strip().lower() for skill in job.required_skills.split(",") if skill
+            skill.strip().lower()
+            for skill in (job.required_skills or "").split(",")
+            if skill.strip()
         )
 
         matching_skills = resume_skills.intersection(required_skills)
@@ -182,6 +237,12 @@ async def upload_resume(file: UploadFile = File(...)):
         resume_text = extract_text_from_docx(file.file)
     else:
         raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
+
+    if not resume_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to extract text from resume. Please upload a valid PDF or DOCX file.",
+        )
 
     matched_jobs = match_jobs(resume_text)
     return {"matched_jobs": matched_jobs}

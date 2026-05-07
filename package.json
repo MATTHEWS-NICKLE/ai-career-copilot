@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "backend": "cd backend && .\\.venv\\Scripts\\python -m uvicorn app:app --reload",
+    "backend": "cd backend && ..\\.venv\\Scripts\\python.exe -m uvicorn app:app --reload --host 127.0.0.1 --port 8000",
     "frontend": "cd frontend && npm start",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
   }
 }

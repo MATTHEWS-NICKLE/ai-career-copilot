@@ -7,3 +7,4 @@ pydantic
 sqlalchemy
 python-docx
 pdfplumber
+python-multipart

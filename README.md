@@ -31,12 +31,14 @@ This project supports bulk job data using a database instead of CSV files and in
 Backend:
 
 * FastAPI
-* PostgreSQL
+* PostgreSQL (optional)
+* SQLite (fallback for local use)
 * SQLAlchemy ORM
 * Pydantic schemas
 * Scikit-learn
 * pdfplumber
 * python-docx
+* python-multipart
 
 Frontend:
 
@@ -51,11 +53,16 @@ Frontend:
 ```
 ai-career-copilot/
 │
-├── app.py
-├── bulk_jobs.py
-├── index.html
-├── README.md
-└── requirements.txt
+├── backend/
+│   ├── app.py
+│   ├── bulk_insert_jobs.py
+│   └── requirements.txt
+├── frontend/
+│   ├── package.json
+│   ├── server.js
+│   └── public/
+│       └── index.html
+└── README.md
 ```
 
 ---
@@ -86,6 +93,8 @@ CREATE TABLE jobs (
 );
 ```
 
+> If you do not want to use PostgreSQL, the backend will use a local SQLite file by default when `DATABASE_URL` is not set.
+
 Example required_skills format:
 
 ```
@@ -104,22 +113,42 @@ python, machine learning, sql, pandas, fastapi
 pip install -r backend/requirements.txt
 ```
 
-3. Ensure PostgreSQL is running and the `DATABASE_URL` environment variable is set if you are not using the default.
-
-4. Start the FastAPI server from the `backend` folder:
+3. Install root npm dependencies so `npm run dev` works:
 
 ```
-uvicorn app:app --reload
+npm install
 ```
 
-The API will be available at `http://127.0.0.1:8000`.
+4. By default, the backend will use a local SQLite database at `backend/ai_career_copilot.db` if `DATABASE_URL` is not set. On first startup, it seeds sample job data automatically when the database is empty.
 
-5. In a separate terminal, install frontend dependencies and start Express:
+5. Start the full app from the repo root with:
+
+```
+npm run dev
+```
+
+This runs both backend and frontend together.
+
+6. If you prefer PowerShell scripts instead, use:
+
+```
+./run-backend.ps1
+./run-frontend.ps1
+```
+
+The API will be available at `http://127.0.0.1:8000` and the UI at `http://localhost:3000`.
+
+If you are not using PowerShell, you can also run the backend directly with:
+
+```
+.\.venv\Scripts\python.exe -m uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+And start the frontend directly with:
 
 ```
 cd frontend
-npm install
-npm start
+node server.js
 ```
 
 The UI is then served at `http://localhost:3000`.
